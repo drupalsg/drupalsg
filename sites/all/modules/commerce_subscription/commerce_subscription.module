@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Defines module's constants and an event handler.
+ */
+
+define('COMMERCE_SUBSCRIPTION_CREATED',         1);
+define('COMMERCE_SUBSCRIPTION_TRIAL',           2);
+define('COMMERCE_SUBSCRIPTION_ACTIVE',          3);
+define('COMMERCE_SUBSCRIPTION_FINISHED',        4);
+define('COMMERCE_SUBSCRIPTION_CANCELLED_USER',  5);
+define('COMMERCE_SUBSCRIPTION_CANCELLED_ADMIN', 6);
+define('COMMERCE_SUBSCRIPTION_FAILED',          7);
+
+define('COMMERCE_SUBSCRIPTION_DURATION_DAYS',   1);
+define('COMMERCE_SUBSCRIPTION_DURATION_WEEKS',  2);
+define('COMMERCE_SUBSCRIPTION_DURATION_MONTHS', 3);
+define('COMMERCE_SUBSCRIPTION_DURATION_YEARS',  4);
+
+/**
+ * Handler for payment events
+ */
+function commerce_subscription_handle_event($type = 'subscription_payment',$transaction) {
+  $order = $order = commerce_order_load($transaction->order_id);
+  rules_invoke_all($type,$order, $transaction);
+}
+
+/**
+ * Defines the product types available for subscriptions
+ *
+ * @return
+ * An array of product type arrays keyed by type.
+ *
+ */
+function commerce_subscription_commerce_product_type_info() {
+
+  $product_types = array();
+  $subs = module_invoke_all('subscription_product_type_info');
+
+  foreach($subs as $payment_provider => $fields) {
+    $product_types[$payment_provider]['type'] = $payment_provider.'_subscription';
+    $product_types[$payment_provider]['name'] = 'Subscription ('.$fields['payment_provider_name'].')';
+    $product_types[$payment_provider]['description'] = $fields['payment_provider_description'];
+    $product_types[$payment_provider]['help'] = $fields['payment_provider_help'];
+  }
+  return $product_types;
+}
+
